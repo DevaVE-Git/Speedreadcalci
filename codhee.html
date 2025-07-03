@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎉 Fun Reading Speed Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Comic Neue', cursive;
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff8dc;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border: 5px dashed #ff69b4;
+    }
+
+    h2 {
+      text-align: center;
+      color: #ff4500;
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    p#originalText {
+      background: #e0ffff;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      color: #333;
+      border: 2px solid #87ceeb;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-top: 15px;
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #ffa07a;
+      background: #fff0f5;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin-top: 15px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #ff69b4;
+      color: white;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #ff1493;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #4b0082;
+      background: #f0fff0;
+      padding: 15px;
+      border-radius: 10px;
+      border: 2px dashed #32cd32;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📚 Fun Reading Speed Game!</h2>
+
+    <p><strong>🎤 Read this aloud:</strong></p>
+    <p id="originalText"></p>
+
+    <button onclick="nextParagraph()">🔁 Next Paragraph</button>
+    <button onclick="startRecognition()">🎙️ Start Speaking</button>
+    <textarea id="userInput" placeholder="Your speech will appear here..."></textarea>
+
+    <button onclick="stopTimer()">⏹️ Stop Timer</button>
+    <button onclick="checkAccuracy()">✅ Check Accuracy</button>
+
+    <p id="result"></p>
+  </div>
+
+  <script>
+    let recognition;
+    let startTime = 0;
+    let endTime = 0;
+    let currentIndex = 0;
+
+    const passages = [
+      "Today, science is growing fast with smart and new ideas. Solar panels now turn sunlight into power for homes and cars. Electric vehicles help reduce air pollution and run without petrol. Robots are used in hospitals to help doctors during surgeries. Drones can fly and take photos or deliver packages.",
+      "The jungle is full of amazing animals. Monkeys swing from tree to tree, and colorful birds sing songs in the morning. Tigers hide in the tall grass, and elephants splash in the river. Nature is full of surprises and beauty.",
+      "Space is a big mystery. Astronauts travel in rockets to explore planets and stars. The moon has no air, and Mars is red and dusty. Telescopes help us see far into the galaxy. Maybe one day, kids like you will visit space too!",
+      "Under the sea, there are fish that glow, crabs that crawl, and whales that sing. Coral reefs are like underwater cities filled with color and life. Divers explore these places to learn more about ocean creatures and protect them."
+    ];
+
+    function displayParagraph(index) {
+      document.getElementById("originalText").innerText = passages[index];
+    }
+
+    function nextParagraph() {
+      currentIndex = (currentIndex + 1) % passages.length;
+      displayParagraph(currentIndex);
+      document.getElementById("userInput").value = "";
+      document.getElementById("result").innerText = "🆕 New paragraph loaded. Click Start Speaking!";
+    }
+
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = function() {
+        startTimer();
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("userInput").value = transcript;
+      };
+
+      recognition.onerror = function(event) {
+        alert("Oops! Something went wrong: " + event.error);
+      };
+    } else {
+      alert("Sorry, your browser doesn't support Speech Recognition.");
+    }
+
+    function startRecognition() {
+      recognition.start();
+    }
+
+    function startTimer() {
+      startTime = new Date().getTime();
+      document.getElementById("result").innerText = "⏱️ Start reading! Once finished reading click - Stop timer";
+    }
+
+    function stopTimer() {
+      endTime = new Date().getTime();
+      document.getElementById("result").innerText = "🛑 Timer stopped. Now check your results!";
+    }
+
+    function checkAccuracy() {
+      const original = passages[currentIndex].toLowerCase().replace(/[.,]/g, "").split(" ");
+      const user = document.getElementById("userInput").value.toLowerCase().replace(/[.,]/g, "").split(" ");
+
+      let matchCount = 0;
+      original.forEach((word, index) => {
+        if (user[index] === word) matchCount++;
+      });
+
+      const accuracy = ((matchCount / original.length) * 100).toFixed(2);
+      const durationInSeconds = (endTime - startTime) / 1000;
+      const wpm = ((user.length / durationInSeconds) * 60).toFixed(2);
+
+      document.getElementById("result").innerHTML = `
+        🎯 <strong>Accuracy:</strong> ${accuracy}%<br>
+        🚀 <strong>Speed:</strong> ${wpm} words per minute<br>
+        📝 <strong>Matched Words:</strong> ${matchCount} / ${original.length}
+      `;
+    }
+
+    // Load the first paragraph on page load
+    window.onload = () => {
+      displayParagraph(currentIndex);
+    };
+  </script>
+</body>
+</html>
